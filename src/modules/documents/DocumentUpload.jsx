@@ -1,10 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
-import api from '../../services/api';
+import api, { API_BASE } from '../../services/api';
 import { Upload, AlertCircle, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 
-export default function DocumentUpload({ user, defaultDept, deptCode, defaultCategory, departments = [] }) {
+// Secciones del menú lateral (deben coincidir con los ids de Sidebar.jsx / sectionType de SectionView)
+export const SECCIONES_LATERALES = [
+  { id: 'caracterizacion', nombre: 'Caracterización' },
+  { id: 'formularios', nombre: 'Formularios' },
+  { id: 'listas-maestras', nombre: 'Listas Maestras' },
+  { id: 'documentos', nombre: 'Documentos' },
+  { id: 'externos', nombre: 'Documentos Externos' }
+];
+
+const normalizarSeccion = (valor) => {
+  if (valor === 'documentos-externos') return 'externos';
+  return SECCIONES_LATERALES.some(s => s.id === valor) ? valor : 'documentos';
+};
+
+export default function DocumentUpload({ user, defaultDept, deptCode, defaultSection, departments = [] }) {
   const [step, setStep] = useState(1);
-  const [categorias, setCategorias] = useState([]);
   const fileInputRef = useRef(null);
   
   const getInitialDept = () => {
@@ -30,7 +43,7 @@ export default function DocumentUpload({ user, defaultDept, deptCode, defaultCat
     tipoAlcance: 'departamento', 
     idDepartamento: getInitialDept(),
     deptCode: getInitialDeptCode(),
-    idCategoria: defaultCategory || '',
+    seccionLateral: normalizarSeccion(defaultSection),
     tipoDestino: 'categoria', 
     menuSeccion: 'docPpal',
     nombreMenuOpci: '',
@@ -53,24 +66,9 @@ export default function DocumentUpload({ user, defaultDept, deptCode, defaultCat
       ...prev, 
       idDepartamento: validDept,
       deptCode: validCode || prev.deptCode,
-      idCategoria: defaultCategory || prev.idCategoria
+      seccionLateral: normalizarSeccion(defaultSection)
     }));
-  }, [defaultDept, deptCode, defaultCategory, departments]);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await api.get('/documents/categories');
-        setCategorias(response.data);
-        if (response.data.length > 0 && !formData.idCategoria) {
-          setFormData(prev => ({ ...prev, idCategoria: response.data[0].IdCategoria }));
-        }
-      } catch (err) {
-        console.error('Error al cargar categorías:', err);
-      }
-    };
-    fetchCategories();
-  }, []);
+  }, [defaultDept, deptCode, defaultSection, departments]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -101,7 +99,7 @@ export default function DocumentUpload({ user, defaultDept, deptCode, defaultCat
     data.append('deptCode', formData.deptCode);
     data.append('tipoDestino', formData.tipoDestino);
     data.append('esMenuSuperior', formData.tipoDestino === 'menuSuperior' ? 'true' : 'false');
-    data.append('idCategoria', formData.tipoDestino === 'categoria' ? formData.idCategoria : ''); 
+    data.append('seccionLateral', formData.tipoDestino === 'categoria' ? formData.seccionLateral : '');
     data.append('menuSeccion', formData.tipoDestino === 'menuSuperior' ? formData.menuSeccion : '');
     data.append('nombreMenuOpci', formData.tipoDestino === 'menuSuperior' ? (formData.nombreMenuOpci || formData.titulo) : '');
     data.append('idUsuario', user?.id || user?.IdUsuario || 1);
@@ -241,15 +239,15 @@ export default function DocumentUpload({ user, defaultDept, deptCode, defaultCat
 
             {formData.tipoDestino === 'categoria' && (
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Seleccione la Categoría</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Seleccione la Sección</label>
                 <select 
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-red-500 outline-none"
-                  value={formData.idCategoria}
-                  onChange={(e) => setFormData({ ...formData, idCategoria: e.target.value })}
+                  value={formData.seccionLateral}
+                  onChange={(e) => setFormData({ ...formData, seccionLateral: e.target.value })}
                 >
-                  {categorias.map((cat) => (
-                    <option key={cat.IdCategoria} value={cat.IdCategoria}>
-                      {cat.Nombre} ({cat.Codigo})
+                  {SECCIONES_LATERALES.map((sec) => (
+                    <option key={sec.id} value={sec.id}>
+                      {sec.nombre}
                     </option>
                   ))}
                 </select>

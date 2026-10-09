@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Upload, FileText, Trash2, Eye, ArrowLeft, Building2 } from 'lucide-react';
-import api from '../services/api';
+import api, { API_BASE } from '../services/api';
 import DocumentUpload from '../modules/documents/DocumentUpload';
 
 export default function SectionView({ title, department: initialDept, sectionType, user }) {
@@ -73,21 +73,23 @@ export default function SectionView({ title, department: initialDept, sectionTyp
     const codigoDoc = (doc.codigo || doc.CodigoDocumento || '').toString().toUpperCase().trim();
     const nombreDoc = (doc.nombre || doc.Titulo || '').toString().toLowerCase();
     
+    // Si el documento tiene sección asignada, se usa esa; si no (documentos viejos), se deduce por el prefijo del código
+    const seccionDoc = doc.SeccionLateral || doc.seccionLateral || null;
+    const seccionActual = sectionType === 'documentos-externos' ? 'externos' : sectionType;
+
     let matchesSection = true;
 
-    if (sectionType === 'caracterizacion') {
+    if (seccionDoc) {
+      matchesSection = seccionDoc === seccionActual;
+    } else if (seccionActual === 'caracterizacion') {
       matchesSection = codigoDoc.startsWith('CP');
-    } else if (sectionType === 'formularios') {
+    } else if (seccionActual === 'formularios') {
       matchesSection = codigoDoc.startsWith('FO');
-    } else if (sectionType === 'documentos') {
-      matchesSection = codigoDoc.startsWith('PR') || 
-                       codigoDoc.startsWith('IT') || 
-                       codigoDoc.startsWith('PG') || 
-                       codigoDoc.startsWith('PL') || 
-                       codigoDoc.startsWith('TB');
-    } else if (sectionType === 'documentos-externos' || sectionType === 'externos') {
-      // Forzamos en false para que no muestre ningún documento de momento
-      matchesSection = false; 
+    } else if (seccionActual === 'documentos') {
+      matchesSection = /^(PR|IT|PG|PL|TB)/.test(codigoDoc);
+    } else {
+      // Listas Maestras y Documentos Externos solo muestran documentos con la sección asignada
+      matchesSection = false;
     }
 
     const matchesSearch = 
@@ -103,7 +105,7 @@ export default function SectionView({ title, department: initialDept, sectionTyp
     if (rutaLimpia.startsWith('uploads/')) {
         rutaLimpia = rutaLimpia.replace('uploads/', '');
     }
-    window.open(`http://localhost:5000/uploads/${rutaLimpia}`, '_blank');
+    window.open(`${API_BASE}/uploads/${rutaLimpia}`, '_blank');
   };
 
   const handleDeleteDoc = async (id) => {
@@ -127,7 +129,7 @@ export default function SectionView({ title, department: initialDept, sectionTyp
           user={user} 
           defaultDept={selectedDept} 
           deptCode={currentDeptCode} 
-          defaultCategory={sectionType} 
+          defaultSection={sectionType} 
           departments={departments}
         />
       </div>

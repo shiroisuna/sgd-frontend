@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Login from './modules/auth/Login';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -9,14 +9,39 @@ import UserModal from './components/UserModal';
 import UsersView from './components/UsersView';
 
 export default function App() {
-  const [user, setUser] = useState(null);
-  const [activeView, setActiveView] = useState('inicio');
+  // Lee un valor guardado en el navegador (si falla o no existe, usa el valor por defecto)
+  const leerGuardado = (clave, porDefecto) => {
+    try {
+      const valor = localStorage.getItem(clave);
+      return valor !== null ? JSON.parse(valor) : porDefecto;
+    } catch {
+      return porDefecto;
+    }
+  };
+
+  // Al recargar la página se restauran usuario, vista y departamento
+  const [user, setUser] = useState(() => leerGuardado('sgd_user', null));
+  const [activeView, setActiveView] = useState(() => leerGuardado('sgd_view', 'inicio'));
+  const [selectedDept, setSelectedDept] = useState(() => leerGuardado('sgd_dept', null));
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
 
-  // Inicializamos con null, se asignará cuando el usuario inicie sesión exitosamente
-  const [selectedDept, setSelectedDept] = useState(null);
+  // Guarda automáticamente cada vez que cambian
+  useEffect(() => {
+    try {
+      if (user) {
+        localStorage.setItem('sgd_user', JSON.stringify(user));
+        localStorage.setItem('sgd_view', JSON.stringify(activeView));
+        localStorage.setItem('sgd_dept', JSON.stringify(selectedDept));
+      }
+    } catch { /* almacenamiento no disponible */ }
+  }, [user, activeView, selectedDept]);
 
   const handleLogout = () => {
+    try {
+      localStorage.removeItem('sgd_user');
+      localStorage.removeItem('sgd_view');
+      localStorage.removeItem('sgd_dept');
+    } catch { /* nada */ }
     setUser(null);
     setSelectedDept(null);
     setActiveView('inicio');
@@ -107,6 +132,10 @@ export default function App() {
 
             {activeView === 'formularios' && (
               <SectionView title="Gestión de Formularios" department={selectedDept} sectionType="formularios" user={user} />
+            )}
+
+            {activeView === 'listas-maestras' && (
+              <SectionView title="Listas Maestras" department={selectedDept} sectionType="listas-maestras" user={user} />
             )}
 
             {activeView === 'documentos-externos' && (

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronUp, LogOut, Home, BarChart2, Folder, Settings, User as UserIcon } from 'lucide-react';
-import api from '../services/api';
+import api, { API_BASE } from '../services/api';
 
 export default function Navbar({ user, onLogout, setActiveView, onOpenUserModal }) {
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -60,7 +60,7 @@ export default function Navbar({ user, onLogout, setActiveView, onOpenUserModal 
       const response = await api.get(`/documents/view/${encodeURIComponent(tituloDocumento)}`);
       
       if (response.data && response.data.url) {
-        const baseURL = 'http://localhost:5000';
+        const baseURL = API_BASE;
         window.open(`${baseURL}${response.data.url}`, '_blank');
       }
     } catch (err) {
