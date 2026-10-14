@@ -7,6 +7,7 @@ import DocumentUpload from './modules/documents/DocumentUpload';
 import IndicatorsView from './components/IndicatorsView';
 import UserModal from './components/UserModal';
 import UsersView from './components/UsersView';
+import ServerStatus from './components/ServerStatus';
 
 export default function App() {
   // Lee un valor guardado en el navegador (si falla o no existe, usa el valor por defecto)
@@ -115,7 +116,8 @@ export default function App() {
                   </div>
                   <div className="p-5 bg-slate-50 rounded-xl border border-slate-200">
                     <h3 className="font-bold text-slate-800 mb-1">🔒 Servidor Local</h3>
-                    <p className="text-sm text-slate-500">Conectado de forma segura a la infraestructura de oficina (192.168.10.112).</p>
+                    {/* <p className="text-sm text-slate-500">Conectado de forma segura a la infraestructura de oficina (192.168.10.112).</p> */}
+                    <ServerStatus className="text-sm mt-1" />                      
                   </div>
                 </div>
               </div>

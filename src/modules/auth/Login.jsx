@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import api from '../../services/api';
 import { ShieldCheck, Lock, User, Mail, X, KeyRound } from 'lucide-react';
 import { LogoIcon } from '../../components/Logo';
+import ServerStatus from '../../components/ServerStatus';
+
 
 export default function Login({ onLoginSuccess }) {
   const [username, setUsername] = useState('');
@@ -223,8 +225,11 @@ export default function Login({ onLoginSuccess }) {
           </button>
         </div>
 
-        <div className="mt-6 text-center text-xs text-slate-400">
+        {/* <div className="mt-6 text-center text-xs text-slate-400">
           Servidor Activo: 192.168.10.112
+        </div> */}
+        <div className="mt-6 text-center text-xs">
+          <ServerStatus />
         </div>
       </div>
 

@@ -70,7 +70,14 @@ export default function UsersView() {
                 <tr key={u.IdUsuario} className="hover:bg-slate-50/50">
                   <td className="p-4 font-medium">{u.Username}</td>
                   <td className="p-4 text-slate-500">{u.email}</td>
-                  <td className="p-4">{u.departamentoNombre || 'Sin asignar'}</td>
+                  <td className="p-4">
+                    {u.departamentoNombre || 'Sin asignar'}
+                    {u.departamentosAdicionalesNombres?.length > 0 && (
+                      <span className="block text-xs text-slate-400">
+                        + {u.departamentosAdicionalesNombres.join(', ')}
+                      </span>
+                    )}
+                  </td>
                   <td className="p-4 text-right space-x-2">
                     <button 
                       onClick={() => handleEdit(u)}

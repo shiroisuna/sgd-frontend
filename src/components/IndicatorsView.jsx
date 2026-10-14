@@ -25,6 +25,11 @@ export default function IndicatorsView({ selectedDept, currentUser }) {
   // Lista de departamentos para el selector del admin
   const [departments, setDepartments] = useState([]);
 
+  // Opciones del selector: el admin ve todos; un usuario con varios departamentos ve solo los suyos
+  const misDepartamentos = Array.isArray(currentUser?.departamentos) ? currentUser.departamentos : [];
+  const opcionesDepto = isAdmin ? departments : misDepartamentos;
+  const mostrarSelectorDepto = isAdmin ? departments.length > 0 : misDepartamentos.length > 1;
+
   // Departamento activo controlado por estado para permitir cambios dinámicos del Admin
   const [deptId, setDeptId] = useState(
     selectedDept || currentUser?.idDepartamento || currentUser?.IdDepartamento || 1
@@ -52,7 +57,7 @@ export default function IndicatorsView({ selectedDept, currentUser }) {
   const [registros, setRegistros] = useState([]);
 
   // Paginación de la tabla de registros
-  const REGISTROS_POR_PAGINA = 3;
+  const REGISTROS_POR_PAGINA = 5;
   const [pagina, setPagina] = useState(1);
 
   // Estado para el Tooltip interactivo de las observaciones en la tabla
@@ -257,19 +262,22 @@ export default function IndicatorsView({ selectedDept, currentUser }) {
 
         <div className="flex items-center gap-3">
           {/* Selector de Departamento exclusivo para Administradores */}
-          {isAdmin && departments.length > 0 && (
+          {mostrarSelectorDepto && (
             <div className="flex items-center gap-2 bg-slate-50 border border-slate-300 px-3 py-2 rounded-xl">
               <span className="text-xs font-bold text-slate-600 uppercase">Dpto:</span>
               <select 
                 value={deptId} 
-                onChange={(e) => setDeptId(e.target.value)}
+                onChange={(e) => setDeptId(Number(e.target.value))}
                 className="bg-transparent text-slate-800 text-sm font-semibold focus:outline-none cursor-pointer"
               >
-                {departments.map(d => (
-                  <option key={d.IdDepartamento} value={d.IdDepartamento}>
-                    {d.Nombre || d.nombre} ({d.Codigo || d.codigo})
-                  </option>
-                ))}
+                {opcionesDepto.map(d => {
+                  const id = d.id ?? d.IdDepartamento;
+                  return (
+                    <option key={id} value={id}>
+                      {d.nombre || d.Nombre} ({d.codigo || d.Codigo})
+                    </option>
+                  );
+                })}
               </select>
             </div>
           )}

@@ -9,6 +9,8 @@ export default function UserModal({ isOpen, onClose, onUserSaved, userToEdit }) 
   const [departamentoId, setDepartamentoId] = useState('');
   const [activo, setActivo] = useState(true);
   const [departments, setDepartments] = useState([]);
+  // Departamentos adicionales que maneja el usuario (ej. AL + PT)
+  const [departamentosAdicionales, setDepartamentosAdicionales] = useState([]);
 
   const isEditing = Boolean(userToEdit);
 
@@ -20,6 +22,7 @@ export default function UserModal({ isOpen, onClose, onUserSaved, userToEdit }) 
         setUsername(userToEdit.Username || userToEdit.username || '');
         setEmail(userToEdit.email || '');
         setDepartamentoId(userToEdit.IdDepartamento || '');
+        setDepartamentosAdicionales((userToEdit.departamentosAdicionales || []).map(Number));
         setActivo(userToEdit.activo ?? userToEdit.Activo ?? true);
         setPassword('');
         setConfirmPassword('');
@@ -29,6 +32,7 @@ export default function UserModal({ isOpen, onClose, onUserSaved, userToEdit }) 
         setPassword('');
         setConfirmPassword('');
         setActivo(true);
+        setDepartamentosAdicionales([]);
       }
     }
   }, [isOpen, userToEdit]);
@@ -45,6 +49,18 @@ export default function UserModal({ isOpen, onClose, onUserSaved, userToEdit }) 
     } catch (err) {
       console.error('Error al cargar departamentos:', err);
     }
+  };
+
+  const toggleAdicional = (id) => {
+    setDepartamentosAdicionales(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  // Al cambiar el principal, se quita de los adicionales si estaba marcado
+  const handleChangePrincipal = (value) => {
+    setDepartamentoId(value);
+    setDepartamentosAdicionales(prev => prev.filter(x => x !== Number(value)));
   };
 
   const handleSubmit = async (e) => {
@@ -69,7 +85,9 @@ export default function UserModal({ isOpen, onClose, onUserSaved, userToEdit }) 
           username,
           email,
           password: password || undefined,
-          activo
+          activo,
+          departamentoId: departamentoId ? parseInt(departamentoId) : undefined,
+          departamentosAdicionales
         });
         alert('¡Usuario actualizado exitosamente!');
       } else {
@@ -77,7 +95,8 @@ export default function UserModal({ isOpen, onClose, onUserSaved, userToEdit }) 
           username,
           email,
           password,
-          departamentoId: parseInt(departamentoId)
+          departamentoId: parseInt(departamentoId),
+          departamentosAdicionales
         });
         alert('¡Usuario creado y credenciales enviadas!');
       }
@@ -94,7 +113,7 @@ export default function UserModal({ isOpen, onClose, onUserSaved, userToEdit }) 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-      <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col">
+      <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
         <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
           <h3 className="font-bold text-slate-800 text-lg">
             {isEditing ? 'Editar Usuario' : 'Registrar Nuevo Usuario'}
@@ -102,7 +121,7 @@ export default function UserModal({ isOpen, onClose, onUserSaved, userToEdit }) 
           <button onClick={onClose} className="text-slate-400 hover:text-slate-700 font-bold text-xl cursor-pointer">✕</button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
           <div>
             <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Usuario</label>
             <input 
@@ -168,22 +187,52 @@ export default function UserModal({ isOpen, onClose, onUserSaved, userToEdit }) 
                   className="border border-slate-300 bg-white p-2.5 rounded-lg w-full text-sm focus:outline-none focus:ring-2 focus:ring-red-900/20"
                 />
               </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Departamento</label>
-                <select 
-                  value={departamentoId} 
-                  onChange={(e) => setDepartamentoId(e.target.value)} required
-                  className="border border-slate-300 bg-white p-2.5 rounded-lg w-full text-sm focus:outline-none focus:ring-2 focus:ring-red-900/20"
-                >
-                  {departments.map((dept) => (
-                    <option key={dept.IdDepartamento} value={dept.IdDepartamento}>
-                      {dept.Nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </>
           )}
+
+          {/* Departamento principal (crear y editar) */}
+          <div>
+            <label className="block text-xs font-bold text-slate-600 uppercase mb-1">Departamento principal</label>
+            <select 
+              value={departamentoId} 
+              onChange={(e) => handleChangePrincipal(e.target.value)} required
+              className="border border-slate-300 bg-white p-2.5 rounded-lg w-full text-sm focus:outline-none focus:ring-2 focus:ring-red-900/20"
+            >
+              {departments.map((dept) => (
+                <option key={dept.IdDepartamento} value={dept.IdDepartamento}>
+                  {dept.Nombre} ({dept.Codigo})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Departamentos adicionales */}
+          <div>
+            <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+              Departamentos adicionales <span className="normal-case font-normal text-slate-400">(opcional)</span>
+            </label>
+            <div className="border border-slate-300 rounded-lg p-2 max-h-40 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-1">
+              {departments
+                .filter(dept => Number(dept.IdDepartamento) !== Number(departamentoId))
+                .map((dept) => {
+                  const id = Number(dept.IdDepartamento);
+                  return (
+                    <label key={id} className="flex items-center gap-2 text-sm text-slate-700 px-2 py-1 rounded hover:bg-slate-50 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={departamentosAdicionales.includes(id)}
+                        onChange={() => toggleAdicional(id)}
+                        className="w-4 h-4 accent-red-900"
+                      />
+                      {dept.Nombre} ({dept.Codigo})
+                    </label>
+                  );
+                })}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">
+              El usuario podrá ver y cargar documentos e indicadores en estos departamentos además del principal.
+            </p>
+          </div>
 
           <div className="flex justify-end gap-3 pt-3 border-t border-slate-200">
             <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 text-sm cursor-pointer">
