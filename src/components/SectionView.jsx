@@ -15,6 +15,14 @@ export default function SectionView({ title, department: initialDept, sectionTyp
   
   const [loading, setLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Recargar la lista cuando DocumentUpload avisa que se subió un documento
+  useEffect(() => {
+    const onSubido = () => setRefreshKey(k => k + 1);
+    window.addEventListener('documentoSubido', onSubido);
+    return () => window.removeEventListener('documentoSubido', onSubido);
+  }, []);
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -63,7 +71,7 @@ export default function SectionView({ title, department: initialDept, sectionTyp
       }
     };
     fetchDocuments();
-  }, [selectedDept]);
+  }, [selectedDept, refreshKey]);
 
   const currentDeptObj = departments.find(d => Number(d.id) === Number(selectedDept));
   const currentDeptCode = currentDeptObj ? currentDeptObj.codigo : (user?.deptCode || 'SGD');
@@ -73,24 +81,20 @@ export default function SectionView({ title, department: initialDept, sectionTyp
     const codigoDoc = (doc.codigo || doc.CodigoDocumento || '').toString().toUpperCase().trim();
     const nombreDoc = (doc.nombre || doc.Titulo || '').toString().toLowerCase();
     
-    // Si el documento tiene sección asignada, se usa esa; si no (documentos viejos), se deduce por el prefijo del código
-    const seccionDoc = doc.SeccionLateral || doc.seccionLateral || null;
+    // La sección se decide por la categoría del documento (CodigoCategoria viene del JOIN en el backend).
+    // Si el documento no tiene categoría, se usa el prefijo del código.
+    const SECCION_POR_CATEGORIA = {
+      CP: 'caracterizacion',
+      FO: 'formularios',
+      PR: 'documentos', IT: 'documentos', PG: 'documentos', PL: 'documentos', TB: 'documentos',
+      LM: 'listas-maestras',
+      EX: 'externos'
+    };
+    const codigoCat = (doc.CodigoCategoria || codigoDoc.substring(0, 2)).toUpperCase();
+    const seccionDoc = SECCION_POR_CATEGORIA[codigoCat] || null;
     const seccionActual = sectionType === 'documentos-externos' ? 'externos' : sectionType;
 
-    let matchesSection = true;
-
-    if (seccionDoc) {
-      matchesSection = seccionDoc === seccionActual;
-    } else if (seccionActual === 'caracterizacion') {
-      matchesSection = codigoDoc.startsWith('CP');
-    } else if (seccionActual === 'formularios') {
-      matchesSection = codigoDoc.startsWith('FO');
-    } else if (seccionActual === 'documentos') {
-      matchesSection = /^(PR|IT|PG|PL|TB)/.test(codigoDoc);
-    } else {
-      // Listas Maestras y Documentos Externos solo muestran documentos con la sección asignada
-      matchesSection = false;
-    }
+    const matchesSection = seccionDoc === seccionActual;
 
     const matchesSearch = 
       codigoDoc.includes(searchTerm.toUpperCase()) ||
