@@ -51,7 +51,11 @@ export default function IndicatorsView({ selectedDept, currentUser }) {
   const [mesFiltro, setMesFiltro] = useState(currentMonth);
   const [registros, setRegistros] = useState([]);
 
-  // Estado para el Tooltip interactivo del objetivo en la tabla
+  // Paginación de la tabla de registros
+  const REGISTROS_POR_PAGINA = 3;
+  const [pagina, setPagina] = useState(1);
+
+  // Estado para el Tooltip interactivo de las observaciones en la tabla
   const [activeTooltipId, setActiveTooltipId] = useState(null);
   const tooltipRef = useRef(null);
 
@@ -74,6 +78,21 @@ export default function IndicatorsView({ selectedDept, currentUser }) {
   useEffect(() => {
     setAnioCarga(anioFiltro);
   }, [anioFiltro]);
+
+  // Al cambiar los registros (filtro, nueva carga) se vuelve a la primera página
+  useEffect(() => {
+    setPagina(1);
+    setActiveTooltipId(null);
+  }, [registros]);
+
+  const totalPaginas = Math.max(1, Math.ceil(registros.length / REGISTROS_POR_PAGINA));
+  const inicio = (pagina - 1) * REGISTROS_POR_PAGINA;
+  const registrosPagina = registros.slice(inicio, inicio + REGISTROS_POR_PAGINA);
+
+  const irAPagina = (nueva) => {
+    setPagina(Math.min(Math.max(1, nueva), totalPaginas));
+    setActiveTooltipId(null);
+  };
 
   // Cerrar tooltip al hacer clic fuera
   useEffect(() => {
@@ -311,7 +330,8 @@ export default function IndicatorsView({ selectedDept, currentUser }) {
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white text-slate-600" ref={tooltipRef}>
               {registros.length > 0 ? (
-                registros.map((r, idx) => {
+                registrosPagina.map((r, i) => {
+                  const idx = inicio + i; // índice global (para la key y el tooltip)
                   const mesNombre = mesesList.find(m => m.id === r.Mes)?.nombre || r.Mes;
                   
                   // Cálculo del porcentaje (Resultado)
@@ -322,41 +342,47 @@ export default function IndicatorsView({ selectedDept, currentUser }) {
 
                   return (
                     <tr key={idx} className="hover:bg-slate-50/50 transition relative">
-                      <td className="p-3 font-medium text-slate-800 relative">
-                        {/* Botón / Texto abreviado "Objetivo" con Tooltip */}
-                        <div className="inline-block relative">
-                          <button
-                            onClick={() => setActiveTooltipId(isTooltipOpen ? null : idx)}
-                            className="text-red-900 hover:text-red-700 font-bold underline decoration-dotted underline-offset-4 cursor-pointer flex items-center gap-1 bg-red-50 hover:bg-red-100/60 px-2.5 py-1 rounded-md transition"
-                          >
-                            <span>🎯 Objetivo</span>
-                            <span className="text-xs">▾</span>
-                          </button>
-
-                          {/* Burbuja flotante / Tooltip hacia ABAJO para evitar recortes */}
-                          {isTooltipOpen && (
-                            <div className="absolute left-0 top-full mt-2 w-80 bg-slate-900 text-white text-xs rounded-xl p-3 shadow-2xl z-50 animate-fadeIn border border-slate-700">
-                              <div className="font-semibold text-red-300 mb-1 border-b border-slate-700 pb-1 flex justify-between items-center">
-                                <span>Detalle del Objetivo</span>
-                                <button 
-                                  onClick={() => setActiveTooltipId(null)}
-                                  className="text-slate-400 hover:text-white px-1 cursor-pointer"
-                                >
-                                  ✕
-                                </button>
-                              </div>
-                              <p className="leading-relaxed text-slate-200">{r.NombreIndicador}</p>
-                              {/* Flecha del tooltip apuntando hacia arriba */}
-                              <div className="absolute left-6 bottom-full w-0 h-0 border-x-8 border-x-transparent border-b-8 border-b-slate-900"></div>
-                            </div>
-                          )}
-                        </div>
+                      {/* Objetivo completo */}
+                      <td className="p-3 font-medium text-slate-800 min-w-[280px] max-w-md whitespace-normal leading-snug">
+                        {r.NombreIndicador}
                       </td>
                       <td className="p-3 text-center">{mesNombre} - {r.Anio}</td>
                       <td className="p-3 text-center font-semibold text-slate-700">{r.Numerador}</td>
                       <td className="p-3 text-center font-semibold text-slate-700">{r.Denominador}</td>
                       <td className="p-3 text-center font-bold text-red-900">{porcentaje}%</td>
-                      <td className="p-3 text-slate-500">{r.Observaciones || 'Sin observaciones'}</td>
+                      {/* Observaciones: tooltip solo si hay texto */}
+                      <td className="p-3 text-slate-500">
+                        {r.Observaciones && r.Observaciones.trim() ? (
+                          <div className="inline-block relative">
+                            <button
+                              onClick={() => setActiveTooltipId(isTooltipOpen ? null : idx)}
+                              className="text-red-900 hover:text-red-700 font-bold underline decoration-dotted underline-offset-4 cursor-pointer flex items-center gap-1 bg-red-50 hover:bg-red-100/60 px-2.5 py-1 rounded-md transition"
+                            >
+                              <span>💬 Ver</span>
+                              <span className="text-xs">▾</span>
+                            </button>
+
+                            {/* Tooltip alineado a la derecha para no salirse de la tabla */}
+                            {isTooltipOpen && (
+                              <div className="absolute right-0 top-full mt-2 w-80 bg-slate-900 text-white text-xs rounded-xl p-3 shadow-2xl z-50 animate-fadeIn border border-slate-700">
+                                <div className="font-semibold text-red-300 mb-1 border-b border-slate-700 pb-1 flex justify-between items-center">
+                                  <span>Observaciones</span>
+                                  <button 
+                                    onClick={() => setActiveTooltipId(null)}
+                                    className="text-slate-400 hover:text-white px-1 cursor-pointer"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                                <p className="leading-relaxed text-slate-200 whitespace-pre-line">{r.Observaciones}</p>
+                                <div className="absolute right-6 bottom-full w-0 h-0 border-x-8 border-x-transparent border-b-8 border-b-slate-900"></div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 italic">Sin observaciones</span>
+                        )}
+                      </td>
                       <td className="p-3 text-center text-xs text-slate-500">{r.RegistradoPorNombre || 'Admin'}</td>
                     </tr>
                   );
@@ -371,6 +397,47 @@ export default function IndicatorsView({ selectedDept, currentUser }) {
             </tbody>
           </table>
         </div>
+
+        {/* Controles de paginación */}
+        {registros.length > REGISTROS_POR_PAGINA && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 text-xs text-slate-500">
+            <span>
+              Mostrando {inicio + 1}–{Math.min(inicio + REGISTROS_POR_PAGINA, registros.length)} de {registros.length} registros
+            </span>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => irAPagina(pagina - 1)}
+                disabled={pagina === 1}
+                className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                ‹ Anterior
+              </button>
+
+              {Array.from({ length: totalPaginas }, (_, n) => n + 1).map((n) => (
+                <button
+                  key={n}
+                  onClick={() => irAPagina(n)}
+                  className={`w-8 h-8 rounded-lg font-bold transition ${
+                    n === pagina
+                      ? 'bg-red-900 text-white shadow-sm'
+                      : 'border border-slate-300 bg-white text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+
+              <button
+                onClick={() => irAPagina(pagina + 1)}
+                disabled={pagina === totalPaginas}
+                className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                Siguiente ›
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* MODAL PARA CARGAR INDICADORES */}

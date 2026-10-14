@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronUp, LogOut, Home, BarChart2, Folder, Settings, User as UserIcon } from 'lucide-react';
 import api, { API_BASE } from '../services/api';
+import Logo from './Logo';
 
 export default function Navbar({ user, onLogout, setActiveView, onOpenUserModal }) {
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -86,9 +87,15 @@ export default function Navbar({ user, onLogout, setActiveView, onOpenUserModal 
         
         {/* Logo / Título del Sistema y Departamento Dinámico */}
         <div className="flex items-center gap-3">
-          <span className="font-extrabold text-xl text-red-800 tracking-wider">SGD-Pola</span>
-          <span className="bg-red-50 text-red-700 text-xs px-2.5 py-1 rounded-md font-semibold border border-red-200">
-            Dpto: {user?.codigoDepartamento || user?.departamentoCodigo || 'N/A'}
+            {/* <span className="font-extrabold text-xl text-red-800 tracking-wider">SGD-Pola</span> */}
+            <Logo />
+          {/* Usuario logueado (el departamento se ve al pasar el mouse) */}
+          <span
+            className="bg-red-50 text-red-700 text-xs px-2.5 py-1 rounded-md font-semibold border border-red-200 flex items-center gap-1.5 max-w-[180px]"
+            title={`Usuario: ${user?.nombreCompleto || user?.username || 'Usuario'} · Dpto: ${user?.codigoDepartamento || user?.departamentoCodigo || 'N/A'}`}
+          >
+            <UserIcon size={14} className="shrink-0" />
+            <span className="truncate">{user?.nombreCompleto || user?.username || 'Usuario'}</span>
           </span>
         </div>
 

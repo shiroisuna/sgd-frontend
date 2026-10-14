@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import api from '../../services/api';
 import { ShieldCheck, Lock, User, Mail, X, KeyRound } from 'lucide-react';
+import { LogoIcon } from '../../components/Logo';
 
 export default function Login({ onLoginSuccess }) {
   const [username, setUsername] = useState('');
@@ -147,11 +148,15 @@ export default function Login({ onLoginSuccess }) {
       <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden p-8">
         
         <div className="text-center mb-8">
-          <div className="inline-flex bg-red-100 p-3 rounded-full text-red-700 mb-3">
+          {/* <div className="inline-flex bg-red-100 p-3 rounded-full text-red-700 mb-3">
             <ShieldCheck size={32} />
+          </div> */}
+
+          <div className="inline-flex mb-3">
+            <LogoIcon size={56} />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800">SGD-Pola</h1>
-          <p className="text-sm text-slate-500 mt-1">Sistema de Gestión de Calidad - Industrias Amapola</p>
+          <h1 className="text-2xl font-bold text-slate-800">SGD</h1>
+          <p className="text-sm text-slate-500 mt-1">Sistema de Gestión de Documentos - Industrias Amapola</p>
         </div>
 
         {error && (
