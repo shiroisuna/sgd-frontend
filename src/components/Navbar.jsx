@@ -96,33 +96,33 @@ export default function Navbar({ user, onLogout, setActiveView, onOpenUserModal 
 
   return (
     <header className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 flex justify-between items-center h-16" ref={dropdownRef}>
+      <div className="w-full px-4 flex justify-between items-center gap-2 h-16" ref={dropdownRef}>
         
         {/* Logo / Título del Sistema y Departamento Dinámico */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
             {/* <span className="font-extrabold text-xl text-red-800 tracking-wider">SGD-Pola</span> */}
             <Logo />
           {/* Usuario logueado (el departamento se ve al pasar el mouse) */}
           <span
-            className="bg-red-50 text-red-700 text-xs px-2.5 py-1 rounded-md font-semibold border border-red-200 flex items-center gap-1.5 max-w-[180px]"
+            className="bg-red-50 text-red-700 text-xs px-2.5 py-1 rounded-md font-semibold border border-red-200 flex items-center gap-1.5 max-w-[180px] shrink-0"
             title={`Usuario: ${user?.nombreCompleto || user?.username || 'Usuario'} · Dpto: ${user?.codigoDepartamento || user?.departamentoCodigo || 'N/A'}`}
           >
             <UserIcon size={14} className="shrink-0" />
-            <span className="truncate">{user?.nombreCompleto || user?.username || 'Usuario'}</span>
+            <span className="hidden 2xl:inline truncate">{user?.nombreCompleto || user?.username || 'Usuario'}</span>
           </span>
         </div>
 
         {/* Menú de Navegación Principal Dinámico */}
-        <nav className="hidden xl:flex items-center space-x-1">
+        <nav className="hidden xl:flex items-center 2xl:gap-1">
           <button 
             onClick={() => { setActiveView('inicio'); setActiveDropdown(null); setIsControlCalidadOpen(false); }}
-            className="px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-1"
+            className="px-1.5 2xl:px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-1 whitespace-nowrap"
           >
             <Home size={15} /> Inicio
           </button>
           <button 
             onClick={handleOpenNormaIso}
-            className="px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-1"
+            className="px-1.5 2xl:px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-1 whitespace-nowrap"
           >
             <BookOpen size={15} /> Norma ISO9001
           </button>
@@ -142,7 +142,7 @@ export default function Navbar({ user, onLogout, setActiveView, onOpenUserModal 
               <div className="relative" key={menuItem.key}>
                 <button 
                   onClick={() => toggleDropdown(menuItem.key)}
-                  className="px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-1"
+                  className="px-1.5 2xl:px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-1 whitespace-nowrap"
                 >
                   {menuItem.label} <ChevronDown size={13} />
                 </button>
@@ -233,7 +233,7 @@ export default function Navbar({ user, onLogout, setActiveView, onOpenUserModal 
           <div className="relative">
             <button 
               onClick={() => toggleDropdown('administrar')}
-              className="px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-1 bg-slate-50 border border-slate-200"
+              className="px-1.5 2xl:px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-1 whitespace-nowrap bg-slate-50 border border-slate-200"
             >
               <Settings size={14} /> Administrar <ChevronDown size={13} />
             </button>
@@ -268,7 +268,7 @@ export default function Navbar({ user, onLogout, setActiveView, onOpenUserModal 
         </nav>
 
         {/* Sección de Datos del Usuario Logueado y Salida */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 shrink-0">
           {/* <div className="flex items-center gap-2 border-r border-slate-200 pr-4">
             <div className="bg-slate-100 p-2 rounded-full text-slate-700">
               <UserIcon size={16} />
