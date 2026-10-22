@@ -8,6 +8,7 @@ import IndicatorsView from './components/IndicatorsView';
 import UserModal from './components/UserModal';
 import UsersView from './components/UsersView';
 import ServerStatus from './components/ServerStatus';
+import ListaMaestraView from './components/ListaMaestraView';
 
 export default function App() {
   // Lee un valor guardado en el navegador (si falla o no existe, usa el valor por defecto)
@@ -82,13 +83,16 @@ export default function App() {
 
       {/* Contenedor principal con Sidebar y Panel de Trabajo */}
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar 
-          currentView={activeView} 
-          setCurrentView={setActiveView} 
-          user={user} 
-          selectedDept={selectedDept}
-          setSelectedDept={setSelectedDept}
-        />
+        {/* En las listas de consulta se oculta el sidebar */}
+        {!['lista-maestra', 'lista-externos'].includes(activeView) && (
+          <Sidebar 
+            currentView={activeView} 
+            setCurrentView={setActiveView} 
+            user={user} 
+            selectedDept={selectedDept}
+            setSelectedDept={setSelectedDept}
+          />
+        )}
       
         {/* Área de Contenido Dinámico */}
         <main className="flex-1 p-6 overflow-y-auto">
@@ -138,6 +142,14 @@ export default function App() {
 
             {activeView === 'listas-maestras' && (
               <SectionView title="Listas Maestras" department={selectedDept} sectionType="listas-maestras" user={user} />
+            )}
+
+            {activeView === 'lista-maestra' && (
+              <ListaMaestraView />
+            )}
+
+            {activeView === 'lista-externos' && (
+              <ListaMaestraView key="externos" soloExternos />
             )}
 
             {activeView === 'documentos-externos' && (
