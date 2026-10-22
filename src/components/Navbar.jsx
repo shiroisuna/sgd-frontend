@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, ChevronUp, LogOut, Home, BarChart2, Folder, Settings, User as UserIcon } from 'lucide-react';
+import { ChevronDown, ChevronUp, LogOut, Home, BarChart2, Folder, Settings, User as UserIcon, BookOpen } from 'lucide-react';
 import api, { API_BASE } from '../services/api';
 import Logo from './Logo';
 
@@ -52,6 +52,19 @@ export default function Navbar({ user, onLogout, setActiveView, onOpenUserModal 
       setActiveDropdown(menu);
       setIsControlCalidadOpen(false);
     }
+  };
+
+  // Norma ISO9001: abre directo el documento más reciente cargado en esa sección
+  const handleOpenNormaIso = () => {
+    setActiveDropdown(null);
+    setIsControlCalidadOpen(false);
+    const [norma] = getDocsByMenuSection('norma-iso');
+    if (!norma?.rutaArchivo) {
+      alert('La Norma ISO9001 aún no ha sido cargada en el sistema.');
+      return;
+    }
+    const ruta = norma.rutaArchivo.replace(/\\/g, '/').replace(/^uploads\//, '');
+    window.open(`${API_BASE}/uploads/${ruta}`, '_blank');
   };
 
   const handleOpenDocument = async (tituloDocumento) => {
@@ -107,7 +120,12 @@ export default function Navbar({ user, onLogout, setActiveView, onOpenUserModal 
           >
             <Home size={15} /> Inicio
           </button>
-
+          <button 
+            onClick={handleOpenNormaIso}
+            className="px-2.5 py-2 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 flex items-center gap-1"
+          >
+            <BookOpen size={15} /> Norma ISO9001
+          </button>
           {[
             { key: 'docPpal', label: 'Doc. Principales', cat: 'Documentos Principales' },
             { key: 'procedimientos', label: 'Procedimientos', cat: 'Procedimientos' },

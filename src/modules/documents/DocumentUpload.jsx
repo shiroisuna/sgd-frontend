@@ -273,6 +273,7 @@ export default function DocumentUpload({ user, defaultDept, deptCode, defaultSec
                     value={formData.menuSeccion}
                     onChange={(e) => setFormData({ ...formData, menuSeccion: e.target.value })}
                   >
+                    <option value="norma-iso">Norma ISO9001</option>
                     <option value="docPpal">Doc. Principales</option>
                     <option value="procedimientos">Procedimientos</option>
                     <option value="instrucciones">Instrucciones</option>
