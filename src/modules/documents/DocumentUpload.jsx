@@ -70,13 +70,23 @@ export default function DocumentUpload({ user, defaultDept, deptCode, defaultSec
     }));
   }, [defaultDept, deptCode, defaultSection, departments]);
 
+  // En Formularios del menú superior se aceptan también Word, Excel y PowerPoint
+  const permiteOffice = formData.tipoDestino === 'menuSuperior' && formData.menuSeccion === 'formularios';
+  const EXTENSIONES = permiteOffice
+    ? ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.xlsm', '.ppt', '.pptx']
+    : ['.pdf'];
+  const textoFormatos = permiteOffice ? 'PDF, Word, Excel o PowerPoint' : 'PDF';
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file && file.type === 'application/pdf') {
+    if (!file) return;
+    const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+    if (EXTENSIONES.includes(ext)) {
       setFormData(prev => ({ ...prev, archivoPdf: file }));
       setMensaje(null);
     } else {
-      alert('Por favor, seleccione un archivo en formato PDF.');
+      alert(`Por favor, seleccione un archivo en formato ${textoFormatos}.`);
+      e.target.value = '';
     }
   };
 
@@ -84,7 +94,7 @@ export default function DocumentUpload({ user, defaultDept, deptCode, defaultSec
     e.preventDefault();
     
     if (!formData.archivoPdf) {
-      setMensaje({ tipo: 'error', texto: 'No se ha adjuntado ningún archivo PDF.' });
+      setMensaje({ tipo: 'error', texto: 'No se ha adjuntado ningún archivo.' });
       return;
     }
 
@@ -307,13 +317,13 @@ export default function DocumentUpload({ user, defaultDept, deptCode, defaultSec
 
         {step === 3 && (
           <div className="space-y-4">
-            <h3 className="text-md font-semibold text-slate-700">3. Adjuntar Archivo PDF</h3>
+            <h3 className="text-md font-semibold text-slate-700">3. Adjuntar Archivo ({textoFormatos})</h3>
 
             <div className="border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center bg-slate-50 relative">
               <input
                 ref={fileInputRef} 
                 type="file" 
-                accept="application/pdf"
+                accept={EXTENSIONES.join(',')}
                 onChange={handleFileChange}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               />
@@ -322,7 +332,7 @@ export default function DocumentUpload({ user, defaultDept, deptCode, defaultSec
                   <Upload size={24} />
                 </div>
                 <p className="text-sm font-bold text-slate-700">
-                  {formData.archivoPdf ? formData.archivoPdf.name : 'Seleccione o arrastre el archivo PDF'}
+                  {formData.archivoPdf ? formData.archivoPdf.name : `Seleccione o arrastre el archivo (${textoFormatos})`}
                 </p>
               </div>
             </div>
