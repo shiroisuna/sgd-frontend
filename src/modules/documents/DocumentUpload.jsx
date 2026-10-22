@@ -269,6 +269,7 @@ export default function DocumentUpload({ user, defaultDept, deptCode, defaultSec
                     <option value="formularios">Formularios</option>
                     <option value="tablas">Tablas</option>
                     <option value="documentos-publicos">Doc. Públicos</option>
+                    <option value="control-calidad">Doc. Públicos › Control de Calidad</option>
                   </select>
                 </div>
 

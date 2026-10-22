@@ -179,17 +179,25 @@ export default function Navbar({ user, onLogout, setActiveView, onOpenUserModal 
                         {isControlCalidadOpen && (
                           <div className="bg-slate-50/75 py-1 border-y border-slate-100 flex flex-col space-y-0.5">
                             {(() => {
-                              const ccDocs = getDocsByCategory('Control de Calidad');
-                              return Array.isArray(ccDocs) && ccDocs.length > 0 ? (
-                                ccDocs.map((ccDoc, ccIdx) => (
-                                  <button 
-                                    key={ccIdx}
-                                    onClick={() => handleOpenDocument(ccDoc.titulo || ccDoc.nombre)} 
-                                    className="w-full text-left px-4 py-1.5 pl-7 text-xs text-slate-600 hover:bg-red-100/60 hover:text-red-700"
-                                  >
-                                    {ccDoc.titulo || ccDoc.nombre}
-                                  </button>
-                                ))
+
+                              
+                              const ccDocs = [
+                                              ...getDocsByMenuSection('control-calidad'),
+                                              ...getDocsByCategory('Control de Calidad')
+                                            ];
+                              return ccDocs.length > 0 ? (
+                                ccDocs.map((ccDoc, ccIdx) => {
+                                  const ccTitulo = ccDoc.nombreMenuOpci || ccDoc.titulo || ccDoc.nombre;
+                                  return (
+                                    <button 
+                                      key={ccIdx}
+                                      onClick={() => handleOpenDocument(ccTitulo)} 
+                                      className="w-full text-left px-4 py-1.5 pl-7 text-xs text-slate-600 hover:bg-red-100/60 hover:text-red-700"
+                                    >
+                                      {ccTitulo}
+                                    </button>
+                                  );
+                                })
                               ) : (
                                 <p className="px-4 py-1.5 pl-7 text-xs text-slate-400 italic">No hay documentos.</p>
                               );
