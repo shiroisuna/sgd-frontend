@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronUp, LogOut, Home, BarChart2, Folder, Settings, User as UserIcon, BookOpen } from 'lucide-react';
 import api, { API_BASE } from '../services/api';
 import Logo from './Logo';
+import { CampanaRecordatorio } from './Recordatorios';
 
 export default function Navbar({ user, onLogout, setActiveView, onOpenUserModal }) {
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -282,6 +283,8 @@ export default function Navbar({ user, onLogout, setActiveView, onOpenUserModal 
               </p>
             </div>
           </div> */} 
+
+          <CampanaRecordatorio user={user} onIrACargar={() => setActiveView('indicadores')} />
 
           <button 
             onClick={onLogout}

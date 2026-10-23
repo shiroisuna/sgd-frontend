@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
+import Swal from 'sweetalert2';
+import { Trash2 } from 'lucide-react';
 
 const mesesList = [
   { id: 1, nombre: 'ENERO' },
@@ -50,11 +52,16 @@ export default function IndicatorsView({ selectedDept, currentUser }) {
   // Control para el input cuando seleccionan "Agregar nuevo..."
   const [mostrarInputNuevo, setMostrarInputNuevo] = useState(false);
   const [nuevoIndicadorNombre, setNuevoIndicadorNombre] = useState('');
+  const [nuevaMeta, setNuevaMeta] = useState('');
+
+  // Meta (%) del indicador seleccionado en el modal (editable)
+  const [metaEdit, setMetaEdit] = useState('');
 
   // Estados de búsqueda / historial inferior (Anual)
   const [anioFiltro, setAnioFiltro] = useState(currentYear);
   const [mesFiltro, setMesFiltro] = useState(currentMonth);
   const [registros, setRegistros] = useState([]);
+  const [recargaRegistros, setRecargaRegistros] = useState(0);
 
   // Paginación de la tabla de registros
   const REGISTROS_POR_PAGINA = 5;
@@ -165,7 +172,39 @@ export default function IndicatorsView({ selectedDept, currentUser }) {
       }
     };
     handleSearchRecords();
-  }, [deptId, anioFiltro, mesFiltro]);
+  }, [deptId, anioFiltro, mesFiltro, recargaRegistros]);
+
+  // Eliminar una carga (ej. se registró en el mes equivocado)
+  const handleEliminarCarga = async (registro) => {
+    const mes = mesesList.find(m => m.id === registro.Mes)?.nombre || registro.Mes;
+    const confirmacion = await Swal.fire({
+      title: '¿Eliminar este resultado?',
+      html: `<b>${registro.NombreIndicador}</b><br/>${mes} ${registro.Anio}: ${registro.Numerador} / ${registro.Denominador}`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      reverseButtons: true,
+      focusCancel: true
+    });
+    if (!confirmacion.isConfirmed) return;
+
+    try {
+      await api.delete(`/indicators/records/${registro.IdCarga}`);
+      setRecargaRegistros(n => n + 1);
+      window.dispatchEvent(new Event('indicadorCargado')); // actualiza el recordatorio
+      Swal.fire({ title: 'Resultado eliminado', icon: 'success', timer: 1500, showConfirmButton: false });
+    } catch (err) {
+      Swal.fire({
+        title: 'No se pudo eliminar',
+        text: err.response?.data?.error || 'Ocurrió un error al eliminar el resultado.',
+        icon: 'error',
+        confirmButtonColor: '#2C6337'
+      });
+    }
+  };
 
   const handleSelectChange = (e) => {
     const value = e.target.value;
@@ -207,6 +246,7 @@ export default function IndicatorsView({ selectedDept, currentUser }) {
       });
 
       alert('Indicador guardado / actualizado exitosamente.');
+      window.dispatchEvent(new Event('indicadorCargado')); // actualiza el recordatorio
       setNumerador('');
       setDenominador('');
       setObservaciones('');
@@ -236,19 +276,39 @@ export default function IndicatorsView({ selectedDept, currentUser }) {
       const response = await api.post('/indicators/config', {
         nombre: nuevoIndicadorNombre,
         idDepartamento: parseInt(deptId),
-        anio: parseInt(anioCarga) // Enviamos el año para que el objetivo sea anual
+        anio: parseInt(anioCarga), // Enviamos el año para que el objetivo sea anual
+        meta: nuevaMeta === '' ? null : Number(nuevaMeta)
       });
 
       alert("¡Indicador guardado con éxito!");
       const nuevoId = response.data?.data?.IdIndicador || response.data?.IdIndicador || response.data?.id || null;
       
       setNuevoIndicadorNombre("");
+      setNuevaMeta('');
       setMostrarInputNuevo(false);
-      await cargarIndicadores(nuevoId);
+      await cargarIndicadores(anioCarga, nuevoId);
 
     } catch (error) {
       console.error("Error al guardar el indicador:", error);
       alert("Hubo un error al guardar el indicador");
+    }
+  };
+
+  // Al cambiar de indicador en el modal, se muestra su meta actual
+  useEffect(() => {
+    const ind = indicadores.find(i => String(i.IdIndicador) === String(selectedIndicador));
+    setMetaEdit(ind?.Meta !== null && ind?.Meta !== undefined ? String(Number(ind.Meta)) : '');
+  }, [selectedIndicador, indicadores]);
+
+  const handleGuardarMeta = async () => {
+    if (!selectedIndicador || selectedIndicador === '__NUEVO__') return;
+    try {
+      await api.put(`/indicators/config/${selectedIndicador}/meta`, { meta: metaEdit === '' ? null : Number(metaEdit) });
+      alert('Meta actualizada.');
+      await cargarIndicadores(anioCarga, selectedIndicador);
+    } catch (err) {
+      console.error('Error al guardar la meta:', err);
+      alert(err.response?.data?.error || 'No se pudo guardar la meta.');
     }
   };
 
@@ -334,6 +394,7 @@ export default function IndicatorsView({ selectedDept, currentUser }) {
                 <th className="p-3 font-semibold text-center">Resultado (%)</th>
                 <th className="p-3 font-semibold">Observaciones</th>
                 <th className="p-3 font-semibold text-center">Registrado por</th>
+                <th className="p-3 font-semibold text-center">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white text-slate-600" ref={tooltipRef}>
@@ -392,12 +453,21 @@ export default function IndicatorsView({ selectedDept, currentUser }) {
                         )}
                       </td>
                       <td className="p-3 text-center text-xs text-slate-500">{r.RegistradoPorNombre || 'Admin'}</td>
+                      <td className="p-3 text-center">
+                        <button
+                          onClick={() => handleEliminarCarga(r)}
+                          title="Eliminar este resultado"
+                          className="text-slate-500 hover:text-rose-600 cursor-pointer"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan="7" className="text-center p-8 text-slate-400">
+                  <td colSpan="8" className="text-center p-8 text-slate-400">
                     No hay registros cargados para este filtro.
                   </td>
                 </tr>
@@ -515,6 +585,28 @@ export default function IndicatorsView({ selectedDept, currentUser }) {
                   </option>
                 </select>
 
+                {/* Meta del indicador seleccionado */}
+                {selectedIndicador && selectedIndicador !== '__NUEVO__' && (
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="text-xs font-bold text-slate-600 uppercase whitespace-nowrap">Meta (%)</label>
+                    <input
+                      type="number" step="any" min="0"
+                      value={metaEdit}
+                      onChange={(e) => setMetaEdit(e.target.value)}
+                      placeholder="Ej: 90"
+                      className="border border-slate-300 bg-white p-2 rounded-lg w-28 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-red-900/20 focus:border-red-900"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleGuardarMeta}
+                      className="border border-slate-300 text-slate-700 text-xs font-semibold px-3 py-2 rounded-lg hover:bg-slate-100 whitespace-nowrap cursor-pointer"
+                    >
+                      Guardar meta
+                    </button>
+                    {metaEdit === '' && <span className="text-[11px] text-slate-400">Sin meta: no cuenta en el cumplimiento</span>}
+                  </div>
+                )}
+
                 {mostrarInputNuevo && (
                   <div className="border border-slate-300 bg-slate-50 p-3 rounded-lg space-y-2 animate-fadeIn">
                     <span className="text-xs text-slate-600 font-bold block">
@@ -528,6 +620,14 @@ export default function IndicatorsView({ selectedDept, currentUser }) {
                         onChange={(e) => setNuevoIndicadorNombre(e.target.value)}
                         placeholder="Nombre del nuevo objetivo..."
                         className="border border-slate-300 bg-white p-2 rounded-lg w-full text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-red-900/20 focus:border-red-900"
+                      />
+                      <input
+                        type="number" step="any" min="0"
+                        value={nuevaMeta}
+                        onChange={(e) => setNuevaMeta(e.target.value)}
+                        placeholder="Meta %"
+                        title="Meta (%) del objetivo"
+                        className="border border-slate-300 bg-white p-2 rounded-lg w-24 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-red-900/20 focus:border-red-900"
                       />
                       <button
                         type="button"

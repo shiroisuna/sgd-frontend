@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, FileText, FolderOpen, ClipboardList, ExternalLink, BarChart3, Building2, ListChecks } from 'lucide-react';
+import { Home, FileText, FolderOpen, ClipboardList, ExternalLink, BarChart3, Building2, ListChecks, LineChart } from 'lucide-react';
 
 export default function Sidebar({ currentView, setCurrentView, user, selectedDept, setSelectedDept }) {
   // Lista de departamentos disponibles (el admin puede ver todos, el usuario normal solo el suyo)
@@ -22,6 +22,7 @@ export default function Sidebar({ currentView, setCurrentView, user, selectedDep
     { id: 'listas-maestras', label: 'Listas Maestras', icon: ListChecks },
     { id: 'documentos-externos', label: 'Documentos Externos', icon: ExternalLink },
     { id: 'indicadores', label: 'Indicadores de Proceso', icon: BarChart3 },
+    { id: 'graficas', label: 'Gráficas de Indicadores', icon: LineChart },
   ];
 
   return (

@@ -8,7 +8,10 @@ import IndicatorsView from './components/IndicatorsView';
 import UserModal from './components/UserModal';
 import UsersView from './components/UsersView';
 import ServerStatus from './components/ServerStatus';
+import { AvisoRecordatorio } from './components/Recordatorios';
 import ListaMaestraView from './components/ListaMaestraView';
+// Las gráficas (recharts) se cargan solo cuando se abre esa vista
+const DashboardView = React.lazy(() => import('./components/DashboardView'));
 
 export default function App() {
   // Lee un valor guardado en el navegador (si falla o no existe, usa el valor por defecto)
@@ -97,6 +100,8 @@ export default function App() {
         {/* Área de Contenido Dinámico */}
         <main className="flex-1 p-6 overflow-y-auto">
           <div className="max-w-6xl mx-auto">
+            <AvisoRecordatorio user={user} onIrACargar={() => setActiveView('indicadores')} />
+
             
             {activeView === 'inicio' && (
               <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center">
@@ -154,6 +159,12 @@ export default function App() {
 
             {activeView === 'documentos-externos' && (
               <SectionView title="Documentos Externos" department={selectedDept} sectionType="externos" user={user} />
+            )}
+
+            {activeView === 'graficas' && (
+              <React.Suspense fallback={<p className="text-center text-slate-400 p-10">Cargando gráficas...</p>}>
+                <DashboardView currentUser={user} />
+              </React.Suspense>
             )}
 
             {activeView === 'indicadores' && (
